@@ -14,7 +14,7 @@ namespace PlaylistCore
     {
         static void Postfix(IBeatmapLevelPack pack, ref LevelPackDetailViewController __instance)
         {
-            if (pack.packID.StartsWith("Sialist"))
+            if (pack.packID.StartsWith("Sialist_"))
             {
                 foreach (var comp in __instance.GetComponentsInChildren<CanvasRenderer>())
                 {

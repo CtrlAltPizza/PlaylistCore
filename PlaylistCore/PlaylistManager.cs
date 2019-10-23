@@ -13,6 +13,7 @@ namespace PlaylistCore
     {
         bool playlistsFullyLoaded = false;
         bool greenlight = false;
+        bool firstLoad = true;
         public override void OnEnable()
         {
             Loader.PlaylistsLoadedEvent += Loader_PlaylistsLoadedEvent;
@@ -26,18 +27,40 @@ namespace PlaylistCore
             StartCoroutine(Greenlight());
             StartCoroutine(WaitForLoad());
         }
-
+        
         private IEnumerator WaitForLoad()
         {
             if (greenlight)
             {
                 SongCoreBeatmapLevelPackCollectionSO customBeatmapLevelPackCollectionSO = SongCore.Loader.CustomBeatmapLevelPackCollectionSO;
-                foreach (var playlist in Loader.Playlists.Values)
+                
+                if (firstLoad)
                 {
-                    var pso = PlaylistLevelPackSO.CreatePackFromPlaylist(playlist);
-                    customBeatmapLevelPackCollectionSO.AddLevelPack(pso);
-                    Logger.log.Critical(pso.packID);
+                    foreach (var playlist in Loader.Playlists.Values)
+                    {
+                        var pso = PlaylistLevelPackSO.CreatePackFromPlaylist(playlist);
+                        customBeatmapLevelPackCollectionSO.AddLevelPack(pso);
+                    }
+                    firstLoad = false;
                 }
+                else
+                {
+                    List<CustomBeatmapLevelPack> _customBeatmapLevelPacks = customBeatmapLevelPackCollectionSO.GetPrivateField<List<CustomBeatmapLevelPack>>("_customBeatmapLevelPacks");
+                    List<IBeatmapLevelPack> _allBeatmapLevelPacks = customBeatmapLevelPackCollectionSO.GetPrivateField<IBeatmapLevelPack[]>("_allBeatmapLevelPacks").ToList();
+
+                    _customBeatmapLevelPacks.RemoveAll(x => x.packID.StartsWith("Sialist_"));
+                    _allBeatmapLevelPacks.RemoveAll(x => x.packID.StartsWith("Sialist_"));
+
+                    customBeatmapLevelPackCollectionSO.SetPrivateField("_customBeatmapLevelPacks", _customBeatmapLevelPacks);
+                    customBeatmapLevelPackCollectionSO.SetPrivateField("_allBeatmapLevelPacks", _allBeatmapLevelPacks.ToArray());
+
+                    foreach (var playlist in Loader.Playlists.Values)
+                    {
+                        var pso = PlaylistLevelPackSO.CreatePackFromPlaylist(playlist);
+                        customBeatmapLevelPackCollectionSO.AddLevelPack(pso);
+                    }
+                }
+
                 StopAllCoroutines();
             }
             else
@@ -93,8 +116,8 @@ namespace PlaylistCore
 
         private void BeatSaverAPI_PlaylistStatusProgress(int soFar, int total, bool downloading)
         {
-            if (downloading)
-                Logger.log.Info($"Song Hash Data Gathered: {soFar} / {total}.");
+            //if (downloading)
+            //    Logger.log.Info($"Song Hash Data Gathered: {soFar} / {total}.");
         }
 
         private IEnumerator Greenlight()

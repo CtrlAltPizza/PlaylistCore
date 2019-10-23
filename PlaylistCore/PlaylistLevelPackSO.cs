@@ -8,7 +8,7 @@ namespace PlaylistCore
 {
     class PlaylistLevelPackSO : SongCoreCustomBeatmapLevelPack
     {
-        public Playlist playlist { get { return _playlist; } set { _playlist = value; UpdateDataFromPlaylist(); } }
+        public Playlist playlist { get { return _playlist; } set { _playlist = value; } }
 
         private Playlist _playlist;
 
@@ -35,17 +35,17 @@ namespace PlaylistCore
             Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(.5f, .5f));
             Sprite cover = sprite;
 
-
-            return new PlaylistLevelPackSO($"Sialist_{playlist.Title}_{playlist.Author}", playlist.Title, cover, new SongCoreCustomLevelCollection(levels));
+            var plist = new PlaylistLevelPackSO($"Sialist_{playlist.Title}_{playlist.Author}", playlist.Title, cover, new SongCoreCustomLevelCollection(levels));
+            return plist; 
 
 
         }
         public PlaylistLevelPackSO(string packID, string packName, Sprite coverImage, CustomBeatmapLevelCollection customBeatmapLevelCollection) : base(packID, packName, coverImage, customBeatmapLevelCollection)
         {
-
+            
         }
 
-        public void UpdateDataFromPlaylist()
+        public void UpdateData()
         {
             Texture2D tex = new Texture2D(1, 1);
             tex.LoadImage(_playlist.Cover);
