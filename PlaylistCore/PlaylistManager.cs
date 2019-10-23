@@ -1,20 +1,50 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Blister.Types;
 using IPA.Utilities;
+using SongCore.OverrideClasses;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace PlaylistCore
 {
     public class PlaylistManager : PersistentSingleton<PlaylistManager>
     {
+        bool playlistsFullyLoaded = false;
+        bool greenlight = false;
         public override void OnEnable()
         {
             Loader.PlaylistsLoadedEvent += Loader_PlaylistsLoadedEvent;
             BeatSaverAPI.BeatSaverFetch += BeatSaverAPI_BeatSaverFetch;
             BeatSaverAPI.PlaylistStatusProgress += BeatSaverAPI_PlaylistStatusProgress;
+            SongCore.Loader.SongsLoadedEvent += Loader_SongsLoadedEvent;
+        }
+
+        private void Loader_SongsLoadedEvent(SongCore.Loader arg1, Dictionary<string, CustomPreviewBeatmapLevel> arg2)
+        {
+            StartCoroutine(Greenlight());
+            StartCoroutine(WaitForLoad());
+        }
+
+        private IEnumerator WaitForLoad()
+        {
+            if (greenlight)
+            {
+                SongCoreBeatmapLevelPackCollectionSO customBeatmapLevelPackCollectionSO = SongCore.Loader.CustomBeatmapLevelPackCollectionSO;
+                foreach (var playlist in Loader.Playlists.Values)
+                {
+                    var pso = PlaylistLevelPackSO.CreatePackFromPlaylist(playlist);
+                    customBeatmapLevelPackCollectionSO.AddLevelPack(pso);
+                    Logger.log.Critical(pso.packID);
+                }
+                StopAllCoroutines();
+            }
+            else
+            {
+                yield return new WaitForSecondsRealtime(.5f);
+                StartCoroutine(WaitForLoad());
+            }
         }
 
         public void Initialize()
@@ -30,6 +60,7 @@ namespace PlaylistCore
         private void BeatSaverAPI_BeatSaverFetch(List<PStore> maps, int successful, int unsuccessful, bool aborted)
         {
             Logger.log.Info($"Song Hash Data Completed. Summary: {successful} fetched. {unsuccessful} failed.");
+            Dictionary<string, Playlist> newPlaylists = new Dictionary<string, Playlist>();
             foreach (var playlist in Loader.Playlists)
             {
                 var cplay = playlist.Value.Maps.ToArray();
@@ -53,14 +84,26 @@ namespace PlaylistCore
                     Maps = cplay.ToList(),
                     Title = playlist.Value.Title
                 };
+                newPlaylists.Add(playlist.Key, newplaylist);
                 Loader.OverwritePlaylist(playlist.Key, newplaylist);
             }
+            Loader.Playlists = newPlaylists;
+            playlistsFullyLoaded = true;
         }
 
         private void BeatSaverAPI_PlaylistStatusProgress(int soFar, int total, bool downloading)
         {
             if (downloading)
                 Logger.log.Info($"Song Hash Data Gathered: {soFar} / {total}.");
+        }
+
+        private IEnumerator Greenlight()
+        {
+            yield return new WaitForSecondsRealtime(1f);
+            if (playlistsFullyLoaded && SongCore.Loader.AreSongsLoaded)
+                greenlight = true;
+            else
+                greenlight = false;
         }
 
         private void OnDisable()

@@ -1,6 +1,8 @@
-﻿using IPA;
+﻿using Harmony;
+using IPA;
 using IPA.Config;
 using IPA.Utilities;
+using System.Reflection;
 using UnityEngine.SceneManagement;
 using IPALogger = IPA.Logging.Logger;
 
@@ -8,8 +10,13 @@ namespace PlaylistCore
 {
     public class Plugin : IBeatSaberPlugin, IDisablablePlugin
     {
+        private static HarmonyInstance harmony;
         public void OnEnable()
         {
+            if (harmony == null)
+                harmony = HarmonyInstance.Create("com.auros.BeatSaber.PlaylistCore");
+            harmony.PatchAll(Assembly.GetExecutingAssembly());
+
             PersistentSingleton<PlaylistManager>.instance.Initialize();
         }
 
@@ -55,7 +62,8 @@ namespace PlaylistCore
 
         public void OnDisable()
         {
-            
+            if (harmony != null)
+                harmony.UnpatchAll();
         }
     }
 }
