@@ -30,16 +30,44 @@ namespace PlaylistCore
         private void BeatSaverAPI_BeatSaverFetch(List<PStore> maps, int successful, int unsuccessful, bool aborted)
         {
             Logger.log.Info($"Song Hash Data Completed. Summary: {successful} fetched. {unsuccessful} failed.");
+            foreach (var playlist in Loader.Playlists)
+            {
+                var cplay = playlist.Value.Maps.ToArray();
+                for (int i = 0; i < cplay.Length; i++)
+                {
+                    foreach (var mapy in maps)
+                    {
+                        if (cplay[i].Key != null && cplay[i].Key == mapy.key)
+                        {
+                            cplay[i].Key = "";
+                            cplay[i].Hash = mapy.hash;
+                            cplay[i].Type = "hash";
+                        }
+                    }
+                }
+                Playlist newplaylist = new Playlist
+                {
+                    Author = playlist.Value.Author,
+                    Cover = playlist.Value.Cover,
+                    Description = playlist.Value.Description,
+                    Maps = cplay.ToList(),
+                    Title = playlist.Value.Title
+                };
+                Loader.OverwritePlaylist(playlist.Key, newplaylist);
+            }
         }
 
         private void BeatSaverAPI_PlaylistStatusProgress(int soFar, int total, bool downloading)
         {
-            Logger.log.Info($"Song Hash Data Gathered: {soFar} / {total}.");
+            if (downloading)
+                Logger.log.Info($"Song Hash Data Gathered: {soFar} / {total}.");
         }
 
         private void OnDisable()
         {
-
+            Loader.PlaylistsLoadedEvent -= Loader_PlaylistsLoadedEvent;
+            BeatSaverAPI.BeatSaverFetch -= BeatSaverAPI_BeatSaverFetch;
+            BeatSaverAPI.PlaylistStatusProgress -= BeatSaverAPI_PlaylistStatusProgress;
         }
     }
 }

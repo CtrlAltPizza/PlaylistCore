@@ -19,6 +19,14 @@ namespace PlaylistCore
             int playlistsLoaded = 0;
             int playlistFetchUnsuccessful = 0;
             List<PStore> final = new List<PStore>();
+
+            int finalCount = 0;
+            foreach (var li in list)
+            {
+                foreach (var st in li.Maps)
+                    finalCount++;
+            }
+
             foreach (Playlist playlist in list)
             {
                 foreach (Beatmap map in playlist.Maps)
@@ -33,7 +41,7 @@ namespace PlaylistCore
                         };
                         final.Add(val);
                         playlistsLoaded++;
-                        PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, true);
+                        PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, finalCount, true);
                     }
                     else if (map.Type == "key")
                     {
@@ -50,18 +58,18 @@ namespace PlaylistCore
                                 };
                                 final.Add(val);
                                 playlistsLoaded++;
-                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, true);
+                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, finalCount, true);
                             }
                             else
                             {
                                 playlistFetchUnsuccessful++;
-                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, true);
+                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, finalCount, true);
                             }
 
-                            if (playlistFetchUnsuccessful + playlistsLoaded == list.Count)
+                            if (playlistFetchUnsuccessful + playlistsLoaded == finalCount)
                             {
                                 BeatSaverFetch.Invoke(final, playlistsLoaded, playlistFetchUnsuccessful, true);
-                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, false);
+                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, finalCount, false);
                             }
                         }));
                     }

@@ -26,7 +26,15 @@ namespace PlaylistCore
             }
             PlaylistsLoadedEvent.Invoke(playlists);
             Playlists = playlists;
+            Logger.log.Info($"Loaded {Playlists.Count} playlists.");
             return playlists;
+        }
+
+        public static void OverwritePlaylist(string path, Playlist playlist)
+        {
+            var bytes = PlaylistLib.Serialize(playlist);
+            File.WriteAllBytes(path, bytes);
+            Logger.log.Info("Converted Playlist: " + playlist.Title);
         }
     }
 }
