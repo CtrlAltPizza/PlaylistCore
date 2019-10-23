@@ -1,0 +1,10 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/nike4613/ModSaber-MetadataFileSchema/master/Schema.json",
+  "author": "Auros",
+  "description": "",
+  "gameVersion": "1.4.2",
+  "id": "PlaylistCore",
+  "name": "PlaylistCore",
+  "version": "1.0.0",
+  "features": []
+}
