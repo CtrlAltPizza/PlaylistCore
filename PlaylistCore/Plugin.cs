@@ -10,7 +10,7 @@ namespace PlaylistCore
     {
         public void OnEnable()
         {
-
+            PersistentSingleton<PlaylistManager>.instance.Initialize();
         }
 
         public void Init(IPALogger logger)

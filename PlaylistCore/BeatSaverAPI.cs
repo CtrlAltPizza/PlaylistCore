@@ -12,7 +12,7 @@ namespace PlaylistCore
 {
     public class BeatSaverAPI
     {
-        public static Action<int, int> PlaylistStatusProgress;
+        public static Action<int, int, bool> PlaylistStatusProgress;
         public static Action<List<PStore>, int, int, bool> BeatSaverFetch;
         public static void lolPants(List<Playlist> list)
         {
@@ -33,37 +33,37 @@ namespace PlaylistCore
                         };
                         final.Add(val);
                         playlistsLoaded++;
-                        PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count);
+                        PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, true);
                     }
-                    else if (map.Type =="key")
+                    else if (map.Type == "key")
                     {
-                        PersistentSingleton<HMMainThreadDispatcher>.instance.Enqueue(delegate ()
+                        //Maybe have manual cancel button
+                        SharedCoroutineStarter.instance.StartCoroutine(FindMap(map.Key, (success, hash) =>
                         {
-                            //Maybe have manual cancel button
-                            SharedCoroutineStarter.instance.StartCoroutine(FindMap(map.Key, (success, hash) =>
-                              {
-                                  if (success)
-                                  {
-                                      PStore val = new PStore
-                                      {
-                                          hash = hash,
-                                          key = map.Key,
-                                          zip = null
-                                      };
-                                      final.Add(val);
-                                      playlistsLoaded++;
-                                      PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count);
-                                  }
-                                  else
-                                  {
-                                      playlistFetchUnsuccessful++;
-                                      PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count);
-                                  }
+                            if (success)
+                            {
+                                PStore val = new PStore
+                                {
+                                    hash = hash,
+                                    key = map.Key,
+                                    zip = null
+                                };
+                                final.Add(val);
+                                playlistsLoaded++;
+                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, true);
+                            }
+                            else
+                            {
+                                playlistFetchUnsuccessful++;
+                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, true);
+                            }
 
-                                  if (playlistFetchUnsuccessful + playlistsLoaded == list.Count)
-                                      BeatSaverFetch.Invoke(final, playlistsLoaded, playlistFetchUnsuccessful, true);
-                              }));
-                        });
+                            if (playlistFetchUnsuccessful + playlistsLoaded == list.Count)
+                            {
+                                BeatSaverFetch.Invoke(final, playlistsLoaded, playlistFetchUnsuccessful, true);
+                                PlaylistStatusProgress.Invoke(playlistsLoaded + playlistFetchUnsuccessful, list.Count, false);
+                            }
+                        }));
                     }
                 }
             }
