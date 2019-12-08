@@ -45,15 +45,20 @@ namespace PlaylistCore
                     }
                     else if (map.Type == "key")
                     {
+                        string theKey;
+                        if (map.Key.Contains("-"))
+                            theKey = ConvertOldHashToNew(map.Key);
+                        else
+                            theKey = map.Key;
                         //Maybe have manual cancel button
-                        SharedCoroutineStarter.instance.StartCoroutine(FindMap(map.Key, (success, hash) =>
+                        SharedCoroutineStarter.instance.StartCoroutine(FindMap(theKey, (success, hash) =>
                         {
                             if (success)
                             {
                                 PStore val = new PStore
                                 {
                                     hash = hash,
-                                    key = map.Key,
+                                    key = theKey,
                                     zip = null
                                 };
                                 final.Add(val);
@@ -75,6 +80,12 @@ namespace PlaylistCore
                     }
                 }
             }
+        }
+
+        private static string ConvertOldHashToNew(string oldKey)
+        {
+            string lastNumber = oldKey.Substring(oldKey.LastIndexOf('-') + 1);
+            return int.Parse(lastNumber).ToString("x");
         }
 
         public static IEnumerator FindMap(string key, Action<bool, string> done)

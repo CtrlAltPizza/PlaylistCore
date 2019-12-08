@@ -76,7 +76,7 @@ namespace PlaylistCore
 
             PlaylistsLoadedEvent.Invoke(playlists);
             Playlists = playlists;
-            Logger.log.Info($"Loaded {Playlists.Count} playlists.");
+            //Logger.log.Info($"Loaded {Playlists.Count} playlists.");
 
             return playlists;
         }
@@ -85,7 +85,7 @@ namespace PlaylistCore
         {
             var bytes = PlaylistLib.Serialize(playlist);
             File.WriteAllBytes(path, bytes);
-            Logger.log.Info("Updated Playlist: " + playlist.Title);
+            //Logger.log.Info("Updated Playlist: " + playlist.Title);
         }
     }
 }
