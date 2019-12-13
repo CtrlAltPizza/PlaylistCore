@@ -1,38 +1,101 @@
-﻿using Harmony;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using IPA;
 using IPA.Config;
 using IPA.Utilities;
-using System.Reflection;
+using Harmony;
 using UnityEngine.SceneManagement;
+using UnityEngine;
 using IPALogger = IPA.Logging.Logger;
 
 namespace PlaylistCore
 {
     public class Plugin : IBeatSaberPlugin, IDisablablePlugin
     {
-        private static HarmonyInstance harmony;
-        public void OnEnable()
-        {
-            if (harmony == null)
-                harmony = HarmonyInstance.Create("com.auros.BeatSaber.PlaylistCore");
-            harmony.PatchAll(Assembly.GetExecutingAssembly());
+        public const string HarmonyId = "com.auros.PlaylistCore";
+        internal static HarmonyInstance harmony;
+        internal static string Name => "PlaylistCore";
+        internal static Ref<PluginConfig> config;
+        internal static IConfigProvider configProvider;
 
-            PersistentSingleton<PlaylistManager>.instance.Initialize();
-        }
-
-        public void Init(IPALogger logger)
+        public void Init(IPALogger logger, [Config.Prefer("json")] IConfigProvider cfgProvider)
         {
             Logger.log = logger;
+            configProvider = cfgProvider;
+            config = configProvider.MakeLink<PluginConfig>((p, v) =>
+            {
+                if (v.Value == null || v.Value.RegenerateConfig)
+                {
+                    Logger.log.Debug("Regenerating PluginConfig");
+                    p.Store(v.Value = new PluginConfig()
+                    {
+                        // Set your default settings here.
+                        RegenerateConfig = false
+                    });
+                }
+                config = v;
+            });
+            harmony = HarmonyInstance.Create(HarmonyId);
         }
 
-        public void OnApplicationStart()
+        public void OnEnable()
         {
-            
+            PlaylistCore.instance.LoadBlisters();
+            ApplyHarmonyPatches();
         }
+
+        public void OnDisable()
+        {
+            RemoveHarmonyPatches();
+        }
+
+        public static void ApplyHarmonyPatches()
+        {
+            try
+            {
+                Logger.log.Debug("Applying Harmony patches.");
+                harmony.PatchAll(Assembly.GetExecutingAssembly());
+            }
+            catch (Exception ex)
+            {
+                Logger.log.Critical("Error applying Harmony patches: " + ex.Message);
+                Logger.log.Debug(ex);
+            }
+        }
+
+        public static void RemoveHarmonyPatches()
+        {
+            try
+            {
+                // Removes all patches with this HarmonyId
+                harmony.UnpatchAll(HarmonyId);
+            }
+            catch (Exception ex)
+            {
+                Logger.log.Critical("Error removing Harmony patches: " + ex.Message);
+                Logger.log.Debug(ex);
+            }
+        }
+
+        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
+        {
+
+        }
+
+        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
+        {
+            //if (scene.name == "MenuCore")
+                //SharedCoroutineStarter.instance.StartCoroutine(PlaylistCore.instance.LoadPlaylists());
+        }
+
 
         public void OnApplicationQuit()
         {
-            
+            Logger.log.Debug("OnApplicationQuit");
+
         }
 
         public void OnFixedUpdate()
@@ -45,25 +108,15 @@ namespace PlaylistCore
 
         }
 
-        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene)
-        {
-
-        }
-
-        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
-        {
-
-        }
 
         public void OnSceneUnloaded(Scene scene)
         {
 
         }
 
-        public void OnDisable()
-        {
-            if (harmony != null)
-                harmony.UnpatchAll();
-        }
+        public void OnApplicationStart()
+        { }
+
+       
     }
 }

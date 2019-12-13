@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PlaylistCore")]
-[assembly: AssemblyCopyright("Copyright © Auros Nexus 2019")]
+[assembly: AssemblyCopyright("Copyright © Auros 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("cfc098e4-04f9-4c27-b72c-d677273327ae")]
+[assembly: Guid("9995b974-f33c-4385-8a5a-823ba39fff6f")]
 
 // Version information for an assembly consists of the following four values:
 //
