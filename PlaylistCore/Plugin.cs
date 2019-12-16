@@ -33,8 +33,9 @@ namespace PlaylistCore
                     p.Store(v.Value = new PluginConfig()
                     {
                         // Set your default settings here.
-                        RegenerateConfig = false
-                    });
+                        RegenerateConfig = false,
+                        KeyToHashDB = new Dictionary<string, string>()
+                    }); ;
                 }
                 config = v;
             });
@@ -87,13 +88,13 @@ namespace PlaylistCore
 
         public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode)
         {
-            //if (scene.name == "MenuCore")
-                //SharedCoroutineStarter.instance.StartCoroutine(PlaylistCore.instance.LoadPlaylists());
         }
 
 
         public void OnApplicationQuit()
         {
+            config.Value.KeyToHashDB = Loader.KeyToHashDB;
+            configProvider.Store(config.Value);
             Logger.log.Debug("OnApplicationQuit");
 
         }

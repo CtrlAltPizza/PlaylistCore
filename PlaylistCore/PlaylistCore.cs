@@ -12,27 +12,14 @@ namespace PlaylistCore
 {
     public class PlaylistCore : PersistentSingleton<PlaylistCore>
     {
+        public  List<CustomPlaylistSO> LoadedPlaylistSO = new List<CustomPlaylistSO>();
+
         internal void LoadBlisters()
         {
-            Loader.LoadAllPlaylistsFromFolder(BeatSaber.InstallPath + "\\Customs\\Playlists");
-
-        }
-
-        public IEnumerator LoadPlaylists()
-        {
-            yield return new WaitForSeconds(1f);
-            /*PlaylistsViewController pvc = Resources.FindObjectsOfTypeAll<PlaylistsViewController>()?.First();
-            if (pvc)
-            {
-                List<CustomPlaylistSO> playlists = new List<CustomPlaylistSO>();
-                foreach (var pl in Loader.AllPlaylists)
-                    playlists.Add(new CustomPlaylistSO(pl.Value));
-                pvc.SetData(playlists.ToArray(), 0);
-            }
-            else
-            {
-                Logger.log.Critical("PVC NULL");
-            }*/
+            Loader.KeyToHashDB = Plugin.config.Value.KeyToHashDB;
+            var allplaylists = Loader.LoadAllPlaylistsFromFolders(new string[] { BeatSaber.InstallPath + "\\Playlists\\", BeatSaber.InstallPath + "\\Customs\\Playlists\\" });
+            foreach (var pl in allplaylists)
+                BeatSaverInfo.TransformPlaylistKeysToHash(pl.Value);
         }
     }
 }
