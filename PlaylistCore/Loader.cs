@@ -21,42 +21,35 @@ namespace PlaylistCore
         public static Dictionary<string, Playlist> AllPlaylists = new Dictionary<string, Playlist>();
         public static Dictionary<string, string> KeyToHashDB = new Dictionary<string, string>();
 
-        public static async Task LoadAllPlaylistsFromFolder(string path)
+        public static void LoadAllPlaylistsFromFolder(string path)
         {
-            await LoadAllPlaylistsFromFolders(new string[] { path });
+            LoadAllPlaylistsFromFolders(new string[] { path });
         }
 
-        public static async Task<Playlist> AddPlaylist(string file)
+        public static Playlist AddPlaylist(string file)
         {
             if (!file.EndsWith("blist"))
                 return null;
-            byte[] result;
-            using (FileStream p = File.Open(file, FileMode.Open))
-            {
-                result = new byte[p.Length];
-                await p.ReadAsync(result, 0, (int)p.Length);
-            }
-            Playlist plist = PlaylistLib.Deserialize(result);
-            await AddPlaylistToLC(plist);
+
+            FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read);
+            MemoryStream ms = new MemoryStream();
+            fs.CopyTo(ms);
+            Playlist plist = PlaylistLib.Deserialize(ms);
+            AddPlaylistToLC(plist);
             return plist;
         }
 
-        public static async Task<Playlist> AddLegacyPlaylist(string file)
+        public static Playlist AddLegacyPlaylist(string file)
         {
-            byte[] result;
-            using (FileStream p = File.Open(file, FileMode.Open))
-            {
-                result = new byte[p.Length];
-                await p.ReadAsync(result, 0, (int)p.Length);
-            }
+            byte[] result = File.ReadAllBytes(file);
             var leg = PlaylistConverter.DeserializeLegacyPlaylist(result);
             var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
-            await AddPlaylistToLC(converted);
+            AddPlaylistToLC(converted);
             return converted;
         }
 
         private static bool isReLoading = false;
-        public static async Task<Dictionary<string, Playlist>> ReloadAllPlaylists()
+        public static Dictionary<string, Playlist> ReloadAllPlaylists()
         {
             if (!isReLoading)
             {
@@ -68,16 +61,16 @@ namespace PlaylistCore
                 foreach (var p in AllPlaylists)
                 {
                     if (p.Key.EndsWith("blist"))
-                        store.Add(p.Key, await AddPlaylist(p.Key));
+                        store.Add(p.Key, AddPlaylist(p.Key));
                     else
-                        store.Add(p.Key, await AddLegacyPlaylist(p.Key));
+                        store.Add(p.Key, AddLegacyPlaylist(p.Key));
                 }
                 PlaylistCore.instance.LoadedPlaylistSO.Clear();
                 foreach (var pl in store)
                 {
                     var n = ScriptableObject.CreateInstance<CustomPlaylistSO>();
                     n.playlist = pl.Value;
-                    await n.SetupCover();
+                    n.SetupCover();
                     PlaylistCore.instance.LoadedPlaylistSO.Add(n);
                 }
                 isDirty = true;
@@ -97,7 +90,7 @@ namespace PlaylistCore
         }
 
         private static bool isLoading = false;
-        public static async Task<Dictionary<string, Playlist>> LoadAllPlaylistsFromFolders(string[] paths)
+        public static Dictionary<string, Playlist> LoadAllPlaylistsFromFolders(string[] paths)
         {
             if (!isLoading)
             {
@@ -106,6 +99,7 @@ namespace PlaylistCore
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
                 Dictionary<string, Playlist> playlists = new Dictionary<string, Playlist>();
+
                 foreach (var path in paths)
                 {
                     Directory.CreateDirectory(path);
@@ -115,13 +109,10 @@ namespace PlaylistCore
                     {
                         try
                         {
-                            byte[] result;
-                            using (FileStream p = File.Open(fPath, FileMode.Open))
-                            {
-                                result = new byte[p.Length];
-                                await p.ReadAsync(result, 0, (int)p.Length);
-                            }
-                            Playlist plist = PlaylistLib.Deserialize(result);
+                            FileStream fs = new FileStream(fPath, FileMode.Open, FileAccess.Read);
+                            MemoryStream ms = new MemoryStream();
+                            fs.CopyTo(ms);
+                            Playlist plist = PlaylistLib.Deserialize(ms); 
                             playlists.Add(fPath, plist);
                             if (!AllPlaylists.ContainsKey(fPath))
                                 AllPlaylists.Add(fPath, plist);
@@ -138,12 +129,7 @@ namespace PlaylistCore
                     {
                         try
                         {
-                            byte[] result;
-                            using (FileStream p = File.Open(filePath, FileMode.Open))
-                            {
-                                result = new byte[p.Length];
-                                await p.ReadAsync(result, 0, (int)p.Length);
-                            }
+                            byte[] result = File.ReadAllBytes(filePath);
                             var leg = PlaylistConverter.DeserializeLegacyPlaylist(result);
                             var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
                             /*
@@ -184,12 +170,7 @@ namespace PlaylistCore
                         {
                             try
                             {
-                                byte[] result;
-                                using (FileStream p = File.Open(filePath, FileMode.Open))
-                                {
-                                    result = new byte[p.Length];
-                                    await p.ReadAsync(result, 0, (int)p.Length);
-                                }
+                                byte[] result = File.ReadAllBytes(filePath);
                                 var leg = PlaylistConverter.DeserializeLegacyPlaylist(result);
                                 var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
                                 /*
@@ -227,10 +208,9 @@ namespace PlaylistCore
                 {
                     var n = ScriptableObject.CreateInstance<CustomPlaylistSO>();
                     n.playlist = pl.Value;
-                    await n.SetupCover();
+                    n.SetupCover();
                     PlaylistCore.instance.LoadedPlaylistSO.Add(n);
                 }
-                sw.Stop();
 
                 PlaylistsLoaded?.Invoke(playlists);
                 Logger.log.Info("LOADER ::: Finished loading " + playlists.Count + " playlists. Took: " + sw.Elapsed.Seconds + "." + sw.Elapsed.Milliseconds / 10 + " seconds.");
@@ -240,11 +220,11 @@ namespace PlaylistCore
             else return null;
         }
 
-        private static async Task AddPlaylistToLC(Playlist list)
+        private static void AddPlaylistToLC(Playlist list)
         {
             var a = ScriptableObject.CreateInstance<CustomPlaylistSO>();
             a.playlist = list;
-            await a.SetupCover();
+            a.SetupCover();
             PlaylistCore.instance.LoadedPlaylistSO.Add(a);
         }
 

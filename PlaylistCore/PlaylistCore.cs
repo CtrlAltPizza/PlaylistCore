@@ -16,10 +16,10 @@ namespace PlaylistCore
 
         public bool CanSetPlaylistsUp { get; private set; }
 
-        internal async void LoadBlisters()
+        internal void LoadBlisters()
         {
             Loader.KeyToHashDB = Plugin.config.Value.KeyToHashDB;
-            var allplaylists = await Loader.LoadAllPlaylistsFromFolders(new string[] { BeatSaber.InstallPath + "\\Playlists\\", BeatSaber.InstallPath + "\\Customs\\Playlists\\" });
+            var allplaylists = Loader.LoadAllPlaylistsFromFolders(new string[] { BeatSaber.InstallPath + "\\Playlists\\", BeatSaber.InstallPath + "\\Customs\\Playlists\\" });
             foreach (var pl in allplaylists)
                 BeatSaverInfo.TransformPlaylistKeysToHash(pl.Value);
         }
