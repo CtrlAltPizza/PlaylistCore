@@ -106,7 +106,11 @@ namespace PlaylistCore
 
         public void OnUpdate()
         {
-
+            if (Input.GetKeyDown(KeyCode.L))
+                Loader.ReloadAllPlaylists();
+            if (Input.GetKeyDown(KeyCode.Y))
+                Loader.UnregisterPlaylist(PlaylistCore.instance.LoadedPlaylistSO.First());
+            
         }
 
 
@@ -117,7 +121,5 @@ namespace PlaylistCore
 
         public void OnApplicationStart()
         { }
-
-       
     }
 }

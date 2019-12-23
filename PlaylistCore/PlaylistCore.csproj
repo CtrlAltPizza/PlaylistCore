@@ -112,7 +112,8 @@
   <ItemGroup>
     <Compile Include="BeatSaverInfo.cs" />
     <Compile Include="CustomPlaylistSO.cs" />
-    <Compile Include="HarmonyPatches\LevelFilteringNavigationController_InitPlaylists.cs" />
+    <Compile Include="FancyRadialMessage.cs" />
+    <Compile Include="HarmonyPatches\LevelFilteringNavigationController_SwitchToPlaylists.cs" />
     <Compile Include="Loader.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Logger.cs" />

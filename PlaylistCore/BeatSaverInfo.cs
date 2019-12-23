@@ -10,7 +10,7 @@ namespace PlaylistCore
 {
     public class BeatSaverInfo
     {
-        /* Baron Pants made me do this. If the key-hash valie isn't stored it'll check BeatSaver. */
+        /* Baron Pants made me do this. If the key-hash value isn't stored it'll check BeatSaver. */
         public static void TransformPlaylistKeysToHash(Playlist playlist)
         {
             for (int i = 0; i < playlist.Maps.Count; i++)
@@ -22,7 +22,6 @@ namespace PlaylistCore
                     {
                         SharedCoroutineStarter.instance.StartCoroutine(FindMapHash(map.Key.ToString(), (success, hash) =>
                         {
-                            Logger.log.Info(map.Key + " ::: " + hash);
                             if (success)
                                 Loader.KeyToHashDB.Add(map.Key.ToString(), hash);
                             
