@@ -10,3 +10,6 @@ Make sure you have the dependencies in the Libs folder. Drag `PlaylistCore.dll` 
 
 ### Usage
 Will load all playlists found in the Beat Saber/Playlists folder in Beat Saber as well as Beat Saber/Customs/Playlists
+
+### Notice
+Converts all playlists into the blister format at runtime. This currently will not modify your files but is subject to change. 
