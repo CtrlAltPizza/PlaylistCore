@@ -31,21 +31,24 @@ namespace PlaylistCore
             if (!file.EndsWith("blist"))
                 return null;
 
-            FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read);
-            MemoryStream ms = new MemoryStream();
-            fs.CopyTo(ms);
-            Playlist plist = PlaylistLib.Deserialize(ms);
-            AddPlaylistToLC(plist);
-            return plist;
+            using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
+            {
+                Playlist plist = PlaylistLib.Deserialize(fs);
+                AddPlaylistToLC(plist);
+                return plist;
+            }
         }
 
         public static Playlist AddLegacyPlaylist(string file)
         {
-            byte[] result = File.ReadAllBytes(file);
-            var leg = PlaylistConverter.DeserializeLegacyPlaylist(result);
-            var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
-            AddPlaylistToLC(converted);
-            return converted;
+            using (StreamReader reader = File.OpenText(file))
+            {
+                var leg = PlaylistConverter.DeserializeLegacyPlaylist(reader);
+                var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
+
+                AddPlaylistToLC(converted);
+                return converted;
+            }
         }
 
         private static bool isReLoading = false;
@@ -109,13 +112,14 @@ namespace PlaylistCore
                     {
                         try
                         {
-                            FileStream fs = new FileStream(fPath, FileMode.Open, FileAccess.Read);
-                            MemoryStream ms = new MemoryStream();
-                            fs.CopyTo(ms);
-                            Playlist plist = PlaylistLib.Deserialize(ms); 
-                            playlists.Add(fPath, plist);
-                            if (!AllPlaylists.ContainsKey(fPath))
-                                AllPlaylists.Add(fPath, plist);
+                            using (FileStream fs = new FileStream(fPath, FileMode.Open, FileAccess.Read))
+                            {
+                                Playlist plist = PlaylistLib.Deserialize(fs);
+
+                                playlists.Add(fPath, plist);
+                                if (!AllPlaylists.ContainsKey(fPath))
+                                    AllPlaylists.Add(fPath, plist);
+                            }
                         }
                         catch
                         {
@@ -129,22 +133,25 @@ namespace PlaylistCore
                     {
                         try
                         {
-                            byte[] result = File.ReadAllBytes(filePath);
-                            var leg = PlaylistConverter.DeserializeLegacyPlaylist(result);
-                            var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
-                            /*
-                            var fileName = Path.GetFileNameWithoutExtension(filePath);
-                            var newFilePath = path + fileName + "_CFB.blist";
-                            OverwritePlaylist(filePath, converted);
-                            playlists.Add(newFilePath, converted);
-                            if (!AllPlaylists.ContainsKey(newFilePath))
-                                AllPlaylists.Add(newFilePath, converted);
-                            File.Move(filePath, newFilePath);
-                            */
-                            if (!AllPlaylists.ContainsKey(filePath))
-                                AllPlaylists.Add(filePath, converted);
-                            playlists.Add(filePath, converted);
-                            Logger.log.Debug("Converted Playlist " + converted.Title);
+                            using (StreamReader reader = File.OpenText(filePath))
+                            {
+                                var leg = PlaylistConverter.DeserializeLegacyPlaylist(reader);
+                                var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
+
+                                /*
+                                var fileName = Path.GetFileNameWithoutExtension(filePath);
+                                var newFilePath = path + fileName + "_CFB.blist";
+                                OverwritePlaylist(filePath, converted);
+                                playlists.Add(newFilePath, converted);
+                                if (!AllPlaylists.ContainsKey(newFilePath))
+                                    AllPlaylists.Add(newFilePath, converted);
+                                File.Move(filePath, newFilePath);
+                                */
+                                if (!AllPlaylists.ContainsKey(filePath))
+                                    AllPlaylists.Add(filePath, converted);
+                                playlists.Add(filePath, converted);
+                                Logger.log.Debug("Converted Playlist " + converted.Title);
+                            }
                         }
                         catch (Exception e)
                         {
@@ -170,22 +177,25 @@ namespace PlaylistCore
                         {
                             try
                             {
-                                byte[] result = File.ReadAllBytes(filePath);
-                                var leg = PlaylistConverter.DeserializeLegacyPlaylist(result);
-                                var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
-                                /*
-                                var fileName = Path.GetFileNameWithoutExtension(filePath);
-                                var newFilePath = path + fileName + "_CFJ.blist";
-                                OverwritePlaylist(filePath, converted);
-                                playlists.Add(newFilePath, converted);
-                                if (!AllPlaylists.ContainsKey(newFilePath))
-                                    AllPlaylists.Add(newFilePath, converted);
-                                File.Move(filePath, newFilePath);
-                                */
-                                if (!AllPlaylists.ContainsKey(filePath))
-                                    AllPlaylists.Add(filePath, converted);
-                                playlists.Add(filePath, converted);
-                                Logger.log.Debug("Converted Playlist " + converted.Title);
+                                using (StreamReader reader = File.OpenText(filePath))
+                                {
+                                    var leg = PlaylistConverter.DeserializeLegacyPlaylist(reader);
+                                    var converted = PlaylistConverter.ConvertLegacyPlaylist(leg);
+
+                                    /*
+                                    var fileName = Path.GetFileNameWithoutExtension(filePath);
+                                    var newFilePath = path + fileName + "_CFB.blist";
+                                    OverwritePlaylist(filePath, converted);
+                                    playlists.Add(newFilePath, converted);
+                                    if (!AllPlaylists.ContainsKey(newFilePath))
+                                        AllPlaylists.Add(newFilePath, converted);
+                                    File.Move(filePath, newFilePath);
+                                    */
+                                    if (!AllPlaylists.ContainsKey(filePath))
+                                        AllPlaylists.Add(filePath, converted);
+                                    playlists.Add(filePath, converted);
+                                    Logger.log.Debug("Converted Playlist " + converted.Title);
+                                }
                             }
                             catch (Exception e)
                             {
@@ -263,8 +273,10 @@ namespace PlaylistCore
         /* Overwrites a legacy playlist with Blister playlist. Does not change file name. */
         public static void OverwritePlaylist(string path, Playlist playlist)
         {
-            var bytes = PlaylistLib.Serialize(playlist);
-            File.WriteAllBytes(path, bytes);
+            using (FileStream fs = File.Open(path, FileMode.OpenOrCreate))
+            {
+                PlaylistLib.SerializeStream(playlist, fs);
+            }
         }
     }
 }
